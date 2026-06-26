@@ -1,0 +1,365 @@
+/* style.css — board presentation: layout, colour, and card tiles.
+   One responsibility: how the board looks. No behaviour lives here; app.js owns
+   that. Plain CSS, no framework, no web fonts. Frosted-glass panels over a deep
+   aurora backdrop; the per-column accent ENCODES the flow (slate -> cyan -> green). */
+
+/* ===== Design tokens ===== */
+
+:root {
+  --backdrop: #0b1020;
+  --text: #e7ecf5;
+  --text-soft: #9aa7bd;
+
+  /* Glass surfaces: translucent white over the dark backdrop + blur. */
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.10);
+  --hairline: rgba(255, 255, 255, 0.14);
+  --blur: blur(16px);
+
+  /* Stage accents — colour as information: queued -> active -> complete. */
+  --todo: #8aa0c6;
+  --doing: #22d3ee;
+  --done: #34d399;
+
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The aurora: layered radial glows over a near-black indigo, not flat black. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--sans);
+  color: var(--text);
+  background:
+    radial-gradient(1100px 620px at 12% -12%, rgba(99, 102, 241, 0.30), transparent 60%),
+    radial-gradient(1000px 680px at 112% 8%, rgba(34, 211, 238, 0.18), transparent 55%),
+    radial-gradient(900px 640px at 50% 124%, rgba(139, 92, 246, 0.20), transparent 60%),
+    var(--backdrop);
+  background-attachment: fixed;
+}
+
+/* Slow ambient drift of the glows — the one "flashy" flourish, kept subtle. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  background:
+    radial-gradient(600px 600px at 30% 30%, rgba(34, 211, 238, 0.10), transparent 60%),
+    radial-gradient(600px 600px at 70% 70%, rgba(139, 92, 246, 0.10), transparent 60%);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2%, 0) scale(1.06); }
+}
+
+/* ===== App bar + add form ===== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(11, 16, 32, 0.55);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.topbar h1 {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.9rem 1.5rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.topbar h1::before {
+  content: "◧ ";
+  color: var(--doing);
+}
+
+.add-form {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.7rem 1.5rem 0.95rem;
+}
+
+.add-form input {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.add-form input::placeholder { color: var(--text-soft); }
+
+.add-form input:focus {
+  outline: none;
+  border-color: var(--doing);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22);
+}
+
+.add-form input[name="title"] { flex: 1; }
+.add-form input[name="label"] { width: 12rem; }
+
+.add-form button {
+  padding: 0.55rem 1.3rem;
+  border: 1px solid rgba(34, 211, 238, 0.55);
+  border-radius: 9px;
+  background: rgba(34, 211, 238, 0.16);
+  color: #d7fbff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.add-form button:hover {
+  background: rgba(34, 211, 238, 0.28);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35);
+}
+
+/* ===== Board layout ===== */
+
+/* Three equal columns; align-items:stretch makes them EQUAL HEIGHT regardless of
+   card count, so the board reads balanced rather than ragged. */
+.board {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  align-items: stretch;
+}
+
+@media (max-width: 720px) {
+  .board { grid-template-columns: 1fr; }
+}
+
+/* Frosted-glass column. The stage accent (--accent) is assigned by position below,
+   so todo/doing/done glow their own colour without any JS change. */
+.column {
+  --accent: var(--todo);
+  display: flex;
+  flex-direction: column;
+  min-height: 62vh;
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--hairline);
+  /* Accent lives in INSET shadows, not a hard border-top: inset shadows clip to
+     the border-radius, so the top accent follows the rounded corners cleanly
+     instead of getting truncated at them. A crisp 2px top line plus a soft glow
+     bleeding down from the top edge. */
+  box-shadow: inset 0 2px 0 0 var(--accent),
+              inset 0 22px 40px -30px var(--accent),
+              0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Colour IS information: queued -> active -> complete. */
+.column:nth-child(1) { --accent: var(--todo); }
+.column:nth-child(2) { --accent: var(--doing); }
+.column:nth-child(3) { --accent: var(--done); }
+
+.column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.1rem 0.2rem 0.85rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.column-head .count {
+  min-width: 1.5rem;
+  padding: 0.05rem 0.5rem;
+  text-align: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--text);
+  font-size: 0.72rem;
+}
+
+.card-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  /* No overflow clip here: an overflow container crops the top card's hover glow at
+     the list's top edge. The column grows with its cards and the page scrolls instead. */
+}
+
+/* ===== Card tiles ===== */
+
+.card {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  background: var(--glass-strong);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4),
+              0 0 18px -4px var(--accent);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.card-label {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.12rem 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--text);
+}
+
+.card-controls {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.card-controls button {
+  width: 1.9rem;
+  height: 1.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.card-controls button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.card-controls button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.card-controls button.delete {
+  margin-left: auto;
+  color: #ff9a9a;
+}
+
+.card-controls button.delete:hover {
+  background: rgba(255, 80, 80, 0.18);
+  border-color: rgba(255, 120, 120, 0.5);
+}
+
+/* ===== Archive (deleted-card history) ===== */
+
+/* Deliberately quieter than a column: dimmer text, a dashed hairline, and no
+   stage accent — it reads as past history, not an active stage of the flow. */
+.archive {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2.5rem;
+  color: var(--text-soft);
+}
+
+.archive-head {
+  margin: 0 0 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.archive-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  opacity: 0.8;
+}
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  /* A faint glass panel, less prominent than the live columns. */
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--hairline);
+}
+
+.archive-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.archive-title {
+  color: var(--text-soft);
+  text-decoration: line-through;
+  text-decoration-color: rgba(154, 167, 189, 0.5);
+}
+
+.archive-label {
+  padding: 0.05rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  color: var(--text-soft);
+}
+
+/* Timestamp pushed to the right, dimmest element — context, not focus. */
+.archive-deleted {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  opacity: 0.7;
+}
+
+/* ===== Quality floor ===== */
+
+:focus-visible {
+  outline: 2px solid var(--doing);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+  .card { transition: none; }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "kisystem",
+  "id": "kisystem",
+  "owner": {
+    "name": "Pr1m4lc0d3"
+  },
+  "metadata": {
+    "description": "KiSYSTEM — measure twice, cut once. A clean-code discipline you turn on at the base of a project: plan, a cheap code map, self-documenting modular sections, blast-radius containment, and a debt guard.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "kisystem",
+      "source": "./",
+      "description": "Build clean, modular, low-breakage code from the base. Measure twice, cut once: plan into the frame, map what exists, write self-documenting reusable sections, keep changes inside their blast radius, guard the size.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Pr1m4lc0d3"
+      },
+      "keywords": [
+        "kisystem",
+        "kiss",
+        "clean-code",
+        "modularity",
+        "technical-debt",
+        "anti-bloat",
+        "planning",
+        "design-doc",
+        "code-map",
+        "blast-radius"
+      ],
+      "category": "workflow"
+    }
+  ]
+}

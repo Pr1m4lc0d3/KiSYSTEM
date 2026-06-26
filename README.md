@@ -1,0 +1,94 @@
+# KiSYSTEM
+### *Keep It Simple, You Stupid Trained Electronic Monkey*
+
+AI writes code fast — and often like a clever monkey: a 600-line file no human can read, three
+copies of the same function because it never checked, and a "small refactor" that quietly broke
+four things you weren't looking at. **KiSYSTEM is the discipline that makes the monkey measure
+twice and cut once.** Complexity is brittle. Simple survives.
+
+It's not a linter you bolt on at the end. You turn it on at the **base** of a project, and it keeps
+the code clean *as it's written* — because the cheapest place to prevent bloat and breakage is the
+wellspring, before either exists.
+
+**It targets the two loudest complaints about AI-written code:**
+- *"I can't read what the AI wrote."* → self-documenting, labeled, modular sections; a one-line
+  synopsis on every function; comments that explain *why*. A human stays in the loop.
+- *"The AI broke code that was working."* → blast-radius containment: a change stays inside its
+  boundary, and the neighbors are checked before it's called done.
+
+## The loop
+
+> **Measure twice, cut once** — plan into the frame → the map says what already exists (and whether
+> it has a twin) → write it as a labeled, reusable section → keep the change in its blast radius →
+> guard the size → record what changed → confirm it landed clean.
+
+## What's inside
+
+One plugin, a thin `kiss` base skill orchestrating eight focused, independently-usable skills:
+
+| Skill | Does |
+|---|---|
+| **`kiss`** | The base: the measure-twice-cut-once gate, project kickoff, routing. |
+| **`kiss-plan`** | Orient in the frame, then a `design.md` — name the unit, check the map for a twin, find its slot, *then* write. |
+| **`kiss-map`** | A cheap generated index (`.kiss/inert.md`) of what exists and where — so the agent never guesses or greps the whole tree. |
+| **`kiss-readable`** | Bounded labeled sections, per-function synopses, why-comments, intention-revealing names. |
+| **`kiss-modularity`** | One concern per unit, sections before files, size tiers — guards monoliths *and* over-fragmentation. |
+| **`kiss-blast-radius`** | Keep a change inside its unit; verify the neighbors are untouched. |
+| **`kiss-clean-edits`** | Extract-on-touch, surgical edits, YAGNI. |
+| **`kiss-changelog`** | Record what changed and why when a cut lands. |
+| **`kiss-debt-guard`** | A dependency-free size audit; systematic backup via git, not clutter; pointers to heavier guards. |
+
+Each is small enough to read in one sitting and usable on its own — a system that preaches
+modularity has to be modular itself — neither a monolith nor a thousand fragments. (The skills carry the `kiss-` prefix: KISS is the principle;
+KiSYSTEM is the system built on it.)
+
+## See it — don't take my word for it
+
+`examples/kanban/` is a real terminal **and** web Kanban app, built entirely under KiSYSTEM — and
+*evolved* under it: CLI → web UI → a glass theme → a deleted-card archive, each change
+`design.md`-first with the core barely touched. Clone it and read it in order: `design.md` →
+`MAP.md` → `CHANGELOG.md` → the `kanban/` modules. Ten minutes, and you'll see what the discipline
+produces *and* how it holds up under feature-creep.
+
+**An honest word on proof.** This is a *demonstration*, not a benchmark. The clean-edit reflex at
+the core (`extract-on-touch`) is genuinely TDD-validated — built test-first against real agent
+behavior (a documented baseline failure → a measured fix → a closed loophole). The rest of the
+system is *shown*, not A/B-proven: a controlled "beats a vanilla agent" test can't be run honestly
+inside an environment that already enforces clean code. So read the example, judge the output, and
+trust the one reflex that's been through the wringer. Nothing here is claimed that isn't backed.
+
+## Origins & credit
+
+The **structure is the contribution** — the integration of these disciplines into one base-up
+system is original, and most of it was designed independently while building real software,
+adopting outside ideas only to fill genuine gaps (why reinvent the wheel?). Where the bricks aren't
+mine, I say so: design docs as a practice aren't my invention, the planning discipline isn't, and
+the behavioral-guardrail idea owes a debt to Andrej Karpathy's notes on LLM coding pitfalls. I
+re-envisioned them and think I made them better; I don't claim their origin. Co-developed with
+Claude Code. I claim what's mine — the whole machine, and the way it fits together.
+
+## The code map (`.kiss/inert.md`)
+
+A generated, project-local index of every symbol — `file · section · symbol · line · synopsis`.
+The agent **greps it first** instead of reading source, so finding things is cheap and can't
+hallucinate a location. It's gitignored — never ships, never drifts — and you regenerate it in one
+pass whenever the structure changes. A *structural* index, deliberately not fuzzy vector search.
+
+## Install
+
+```
+/plugin marketplace add Pr1m4lc0d3/KiSYSTEM
+/plugin install kisystem@kisystem
+```
+
+Then invoke `kiss` at the start of a project. It plans, maps, sets a budget, and arms the guard —
+then gets out of your way.
+
+## Size-budget defaults (tunable)
+
+`review` ~300 · `extract` ~500 · `hard-stop` ~800. Conservative public defaults — baseline them
+from your real files, then ratchet down. The tiers matter more than the numbers.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

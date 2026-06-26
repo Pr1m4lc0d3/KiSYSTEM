@@ -1,0 +1,19 @@
+{
+  "_comment": "KISS size budget for this repo. Baseline these from the repo's real distribution, then ratchet down. Tiers are line counts. See the kiss-debt-guard skill.",
+  "tiers": {
+    "review": 300,
+    "extract": 500,
+    "hard_stop": 800
+  },
+  "include_extensions": [
+    ".py", ".js", ".jsx", ".ts", ".tsx", ".cs", ".java", ".go",
+    ".rb", ".rs", ".cpp", ".cc", ".c", ".h", ".hpp", ".php", ".kt", ".swift"
+  ],
+  "exclude_dirs": [
+    ".git", "node_modules", "bin", "obj", "dist", "build", "out",
+    ".vs", ".venv", "venv", "__pycache__", "vendor", "packages", ".kiss"
+  ],
+  "exclude_globs": ["*.min.js", "*.designer.cs", "*.g.cs", "*.g.i.cs"],
+  "waivers": {
+  }
+}

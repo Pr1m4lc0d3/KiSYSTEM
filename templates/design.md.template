@@ -1,0 +1,38 @@
+# Design — <feature or project name>
+
+> Written before the code. A map, not a manuscript. Delete this line when you start.
+
+## Goal
+
+<What "done" looks like, as a verifiable condition. Not "make it work" —
+"X returns Y for input Z" / "the failing test for it passes".>
+
+## Modules
+
+<The units this breaks into. For each: what it does · how it's used · what it depends on.
+If you can't name a unit's single responsibility in one sentence, it isn't a unit yet.>
+
+- **<unit>** — does: … · used by: … · depends on: …
+- **<unit>** — does: … · used by: … · depends on: …
+
+## Interfaces
+
+<How the units talk. A consumer should understand a unit without reading its internals;
+you should be able to change internals without breaking consumers.>
+
+## Build sequence
+
+<Ordered steps, each with an observable verify check.>
+
+1. <step> → verify: <check>
+2. <step> → verify: <check>
+3. <step> → verify: <check>
+
+## Frame check (measure twice)
+
+<Before building: did you check the map (.kiss/inert.md) for a twin or relative of each unit?
+Note any existing code you'll reuse or extend instead of writing new.>
+
+## Open questions / assumptions
+
+<Anything ambiguous. List interpretations rather than silently picking one.>

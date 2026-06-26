@@ -1,0 +1,17 @@
+# KISS code map — generated, project-local, never shipped
+.kiss/
+
+# Kanban example — runtime board files created when the app runs
+board.json
+demo-board.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc

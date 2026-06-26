@@ -1,0 +1,32 @@
+{
+  "name": "kisystem",
+  "description": "KiSYSTEM: build clean, modular, low-breakage code from the base of a project. Measure twice, cut once. A thin orchestrating base skill plus focused skills for planning/design.md, a cheap code map (inert.md), self-documenting sections, modularity budgets, blast-radius containment, clean-edit reflexes, a changelog ritual, and a light debt guard.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Pr1m4lc0d3"
+  },
+  "license": "MIT",
+  "keywords": [
+    "kisystem",
+    "kiss",
+    "clean-code",
+    "modularity",
+    "technical-debt",
+    "anti-bloat",
+    "planning",
+    "design-doc",
+    "code-map",
+    "blast-radius"
+  ],
+  "skills": [
+    "./skills/kiss",
+    "./skills/kiss-plan",
+    "./skills/kiss-map",
+    "./skills/kiss-readable",
+    "./skills/kiss-modularity",
+    "./skills/kiss-blast-radius",
+    "./skills/kiss-clean-edits",
+    "./skills/kiss-debt-guard",
+    "./skills/kiss-changelog"
+  ]
+}
