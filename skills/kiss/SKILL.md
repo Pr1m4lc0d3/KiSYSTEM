@@ -25,6 +25,7 @@ before you cut:
 | Do I understand the frame and the slot it goes in? | `kiss-plan` |
 | Is the change scoped to one bounded unit? | `kiss-blast-radius` |
 | **If replacing a condition — what is it *incidentally* preventing?** | **`kiss-blast-radius`** |
+| **If DELETING an entity — what is its full footprint?** (assets, config rows, data dirs, build output) | **`kiss-blast-radius`** → *residue trap* |
 | Is the host file within its size budget? | `kiss-clean-edits` (extract-on-touch) |
 | **Then cut — once, deliberately.** | the edit |
 | Did it land clean — nothing else touched? | `kiss-blast-radius` verify |
@@ -86,8 +87,12 @@ bearing**, and your clean-up is the most dangerous thing in the repo.
    subsequent step is verified as it lands.
 3. **Consolidate concepts** (`kiss-coherence`) — this finds *live product bugs*, not just ugly code. It is
    the highest-value pass in a retrofit and the one no size audit can do for you.
-4. **Split by byte-motion** — pure moves, no logic changes. Cheap and safe.
-5. **Refactor logic last.** Highest risk, lowest urgency. Often correctly deferred forever.
+4. **Sweep dead DATA, not just dead code** (`kiss-coherence` → *the reverse pass*). Run each store
+   **backwards**: does every record still have an owner in code? Dead-code sweeps prove the *code* is gone
+   and say **nothing** about the avatars, config rows, vaults and build artifacts it left behind — which a
+   wildcard packaging glob will cheerfully **ship**. Check the *deployed* tree, not just the repo.
+5. **Split by byte-motion** — pure moves, no logic changes. Cheap and safe.
+6. **Refactor logic last.** Highest risk, lowest urgency. Often correctly deferred forever.
 
 **The retrofit-specific traps — all three cost real regressions:**
 

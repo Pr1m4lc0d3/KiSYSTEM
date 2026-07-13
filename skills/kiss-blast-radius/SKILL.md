@@ -76,6 +76,45 @@ unlicensed agents joined a paid council; the orchestrator appeared in the agent 
 appear at all, **do not "fix" it to fail closed.** Fix the routing that wrongly reached it, and mark the
 default as deliberate (see `kiss-coherence` → *Record the negative finding*).
 
+## Deleting an entity — the residue trap
+
+The trap above is a change that reaches **too far**. This one is a deletion that does not reach **far
+enough** — and it is the more common of the two.
+
+> **Deleting an entity's code is not deleting the entity.**
+
+An entity — an agent, a plugin, a user, a product, a feature flag — has a **footprint** far wider than its
+class. Delete the class and the rest silently persists:
+
+| Residue | Where it hides |
+|---|---|
+| **asset files** | avatars, icons, seed content, sample data |
+| **config rows** | a `true` in a settings JSON for an id that no longer exists |
+| **data folders** | per-entity vaults, caches, workspaces, session stores |
+| **build artifacts** | `bin/`, `dist/` — a *non-clean* build never removes what source deleted |
+| **packaging globs** | `<Content Include="Assets\**\*" />` will happily **ship a corpse** |
+
+**A real case:** two retired entities were cleanly removed from the source tree — no code, nothing in git,
+a green build. They still **shipped**: 4.2 MB of avatars, two per-entity vaults, four bootstrapper folders,
+and two stale `true` rows in the settings file that made the app *behave as if they were still enabled*. A
+wildcard packaging glob swept them straight into the release.
+
+**Nothing was wrong. Nothing threw. The dead-code sweep reported clean — because it swept dead *code*.**
+
+**Before deleting an entity:**
+
+1. **Enumerate the footprint, don't guess it.** Grep the **id string** — not the class name — across the
+   *whole* repo *and* the deploy/output tree: config, assets, data dirs, build output. The id outlives the
+   type.
+2. **Look for an existing purge path.** Most systems that create entities at runtime already have one
+   (`DeleteEntityData`, a cascade, an uninstall hook). If it exists, **deletion must go through it** — a
+   hand-rolled `rm` of the class is how the footprint gets orphaned. If it does *not* exist, that absence
+   is itself the finding.
+3. **Check the packaging globs.** A wildcard `Content Include` means anything left in the tree ships.
+4. **Force a clean build.** Stale `bin/`/`dist/` output is a second, invisible copy of the corpse.
+
+> **A green dead-code sweep proves the code is gone. It says nothing about the data.**
+
 ## Why containment beats cleanup
 
 Collateral damage is the most expensive kind: it breaks code that was already working and that no

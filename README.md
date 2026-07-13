@@ -34,6 +34,9 @@ They had drifted. And the drift was not cosmetic — it was already shipping as 
 - a **licence bypass** — unentitled users receiving paid features
 - a headline feature **100% blank in production**, because *one* malformed record threw and a bare `catch`
   swallowed it
+- two **retired entities that were still shipping** — deleted from the code cleanly, nothing left in version
+  control, dead-code sweep green — yet still occupying **ten saved user records**, so a container that
+  promised 17 members delivered 15, silently, forever
 
 **None of them threw an exception. None of them failed a test.** 711 tests passed the entire time. They were
 invisible to size audits, dead-code sweeps, doc-drift checks and coverage analysis.
@@ -47,7 +50,15 @@ Searching for `roster` finds nothing; searching for the *persistence* — the fi
 singleton — finds every answerer. Then: one canonical accessor, everyone else delegates, and a pre-commit
 guard **fails the build** when a new site starts deriving a concept that already has an owner.
 
-**Two more rules, both paid for in regressions:**
+**Run the pass BACKWARDS too.** The audit above asks *"how many places in code answer this question?"* — it
+finds **contradiction**. Run each store the other way — ***"does every record in the store still have an owner
+in code?"*** — and you find **residue**: entities deleted from code whose data was left behind, still in the
+config, still being read, **still shipping**. Deleting an entity's *code* is not deleting the entity; it has a
+footprint (assets, config rows, data folders, build output) and **nothing enumerates it unless someone built
+an enumerator**. A dead-code sweep proves the *code* is gone and says nothing about the 4 MB corpse a wildcard
+packaging glob is about to ship. *(Ours was one packaging step from the installer.)*
+
+**Three more rules, all paid for in regressions:**
 
 - **Consolidation is not free.** A condition often does two jobs: the one it states, and one nobody wrote
   down. Replacing it with something *cleaner and correct* can silently delete a rule — and **your test suite
@@ -56,6 +67,10 @@ guard **fails the build** when a new site starts deriving a concept that already
 - **Record the negative finding.** When you investigate something suspicious and conclude *"actually, this is
   correct"* — **write that at the site.** Otherwise the next person repeats the whole investigation and
   eventually "fixes" it into a bug. *A "no bug here" finding that isn't written down is not a finding.*
+- **Get the polarity of the fallback right, every time.** `unknown ⇒ allow` turns every routing accident into a
+  **grant** — that is how the licence bypass happened. But the opposite is not a rule: in the very same
+  codebase, a purge that drops what it cannot verify would **destroy user data**, so there `unknown ⇒ keep` is
+  correct. Ask what the *unknown* case costs in **this** direction, not what it cost last time.
 
 📄 **Full case study, with the numbers and the damage:** [`docs/RETROFIT-CASE-STUDY.md`](docs/RETROFIT-CASE-STUDY.md)
 

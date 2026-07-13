@@ -67,6 +67,35 @@ visible and tracked, not silently forgotten. Add a second check that fails if an
 debt. This is a deliverable *alongside* the file map — the map says what's in each unit; the index says
 which unit is the sole answerer.
 
+## The reverse pass — orphaned data (do this too; it is half the audit)
+
+The audit above runs **code → store**: *for this question, how many places in code answer it?* Run it
+backwards as well:
+
+> **store → code: does every record in the store still have an OWNER in the code?**
+
+Same concept index, same stores, opposite direction — and it finds a completely different class of bug.
+The forward pass finds **contradiction**. The reverse pass finds **residue**: entities deleted from code
+whose data was left behind, still sitting in config, still shipping in the package, still being *read*.
+
+For each concept in the index, take its **store** and enumerate the ids in it. Any id that no code path
+can still own is an orphan. Then check the three places orphans hide that a source-tree grep will *not*
+show you:
+
+- **the deployed/output tree** (`bin/`, `dist/`, the install dir) — a non-clean build never deletes what
+  source deleted, so the corpse is still in the artifact even when the repo is spotless
+- **wildcard packaging globs** (`Content Include="Assets\**\*"`) — these **ship** anything left in the tree
+- **config rows keyed by id** — a stale `"retired_thing": true` in an enabled-state store makes the app
+  *behave* as though a deleted entity is still switched on
+
+**Why every other guard misses it:** a dead-code sweep proves the *code* is gone. Size audits weigh files
+that exist. Coverage measures executed lines. Not one of them looks at the **store**, so a 4 MB corpse
+rides into production with a green board. See `kiss-blast-radius` → *the residue trap* for the deletion-side
+discipline that prevents orphans in the first place.
+
+> **A concept index that records the store is what makes this pass possible.** That is a second reason to
+> keep it — not just "who answers?" but "who is still *in* there?"
+
 ## AI-native rule (do not skip)
 
 > **When a MODEL reads system state, enumerate every surface it can read and prove they agree.**
