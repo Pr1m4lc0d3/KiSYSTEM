@@ -16,6 +16,49 @@ wellspring, before either exists.
 - *"The AI broke code that was working."* → blast-radius containment: a change stays inside its
   boundary, and the neighbors are checked before it's called done.
 
+## The failure the monkey can't see (and why `kiss-coherence` exists)
+
+The README above says the monkey writes *"three copies of the same function because it never checked."*
+That was optimistic.
+
+Retrofitting KiSYSTEM onto a real 127,000-line AI-built application, we found **eight** implementations of
+a single concept — *"which items are installed?"* — reading four different stores. **Not one of them shared
+a name.** They were called `LoadSpecialists`, `Enumerate`, `ExecuteToolList`, `BuildRosterContent`… so every
+"does a twin already exist?" check **passed cleanly while the eighth duplicate was written.**
+
+They had drifted. And the drift was not cosmetic — it was already shipping as bugs:
+
+- an AI that **could not see its own data**, denied it existed, and proposed creating **duplicate ghost
+  records** of it
+- **~48 abilities silently dead** because two hand-maintained lists disagreed about what existed
+- a **licence bypass** — unentitled users receiving paid features
+- a headline feature **100% blank in production**, because *one* malformed record threw and a bare `catch`
+  swallowed it
+
+**None of them threw an exception. None of them failed a test.** 711 tests passed the entire time. They were
+invisible to size audits, dead-code sweeps, doc-drift checks and coverage analysis.
+
+> **Code can be locally immaculate — small files, clean names, one responsibility each — and globally
+> incoherent, with one concept answered eight different ways.**
+> **A size audit scores that codebase as excellent. Only a coherence pass sees it.**
+
+`kiss-coherence` is the pass that sees it. Its method is one trick: **grep by STORE, not by concept name.**
+Searching for `roster` finds nothing; searching for the *persistence* — the file glob, the table, the
+singleton — finds every answerer. Then: one canonical accessor, everyone else delegates, and a pre-commit
+guard **fails the build** when a new site starts deriving a concept that already has an owner.
+
+**Two more rules, both paid for in regressions:**
+
+- **Consolidation is not free.** A condition often does two jobs: the one it states, and one nobody wrote
+  down. Replacing it with something *cleaner and correct* can silently delete a rule — and **your test suite
+  will not tell you**, because the rule was never tested; it was never even intended. *(This is how our own
+  cleanup deleted a licence gate.)*
+- **Record the negative finding.** When you investigate something suspicious and conclude *"actually, this is
+  correct"* — **write that at the site.** Otherwise the next person repeats the whole investigation and
+  eventually "fixes" it into a bug. *A "no bug here" finding that isn't written down is not a finding.*
+
+📄 **Full case study, with the numbers and the damage:** [`docs/RETROFIT-CASE-STUDY.md`](docs/RETROFIT-CASE-STUDY.md)
+
 ## The loop
 
 > **Measure twice, cut once** — plan into the frame → the map says what already exists (and whether
@@ -24,7 +67,7 @@ wellspring, before either exists.
 
 ## What's inside
 
-One plugin, a thin `kiss` base skill orchestrating eight focused, independently-usable skills:
+One plugin, a thin `kiss` base skill orchestrating nine focused, independently-usable skills:
 
 | Skill | Does |
 |---|---|
@@ -33,7 +76,8 @@ One plugin, a thin `kiss` base skill orchestrating eight focused, independently-
 | **`kiss-map`** | A cheap generated index (`.kiss/inert.md`) of what exists and where — so the agent never guesses or greps the whole tree. |
 | **`kiss-readable`** | Bounded labeled sections, per-function synopses, why-comments, intention-revealing names. |
 | **`kiss-modularity`** | One concern per unit, sections before files, size tiers — guards monoliths *and* over-fragmentation. |
-| **`kiss-blast-radius`** | Keep a change inside its unit; verify the neighbors are untouched. |
+| **`kiss-blast-radius`** | Keep a change inside its unit; verify the neighbors are untouched — and never delete a condition without asking what it was *incidentally* preventing. |
+| **`kiss-coherence`** | **One question, one answer.** Exactly one canonical accessor per concept — catches the cross-cutting duplication that file-size and modularity audits structurally *cannot* see. |
 | **`kiss-clean-edits`** | Extract-on-touch, surgical edits, YAGNI. |
 | **`kiss-changelog`** | Record what changed and why when a cut lands. |
 | **`kiss-debt-guard`** | A dependency-free size audit; systematic backup via git, not clutter; pointers to heavier guards. |

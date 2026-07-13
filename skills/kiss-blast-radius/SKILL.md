@@ -41,6 +41,41 @@ A change isn't done because it's written; it's done when you've shown it didn't 
 State the evidence, don't assert success. "Diff is confined to `payments/`, build is green, the
 auth tests still pass" — not "should be fine."
 
+## Replacing a condition — the silent-deletion trap
+
+Containment is not enough. You can stay perfectly inside your bounded unit, change exactly what you
+were asked to, pass every test — **and still delete a rule.**
+
+Because a condition often does **two jobs**: the one it says, and one nobody wrote down.
+
+| The "ugly" line | What it *says* | What it was **also** doing |
+|---|---|---|
+| `ctrl is TemplateBase ? Roster.IsEnabled(id) : Settings.IsEnabled(id)` | pick the right store | **hiding licence-locked agents** — Roster didn't know them, so it returned `false` |
+| the same line, elsewhere | pick the right store | **hiding the orchestrator** from the agent roster — same accident |
+
+Both were replaced with a *correct*, cleaner, identity-based accessor. Both hidden rules evaporated:
+unlicensed agents joined a paid council; the orchestrator appeared in the agent list, un-removable.
+**Neither was caught by 700+ passing tests** — because the rule was never *tested*; it was never even
+*intended*. It was a side-effect that load-bore.
+
+> **Before you replace a condition, ask what it is *incidentally preventing*.**
+> Not what it says — **what it stops from happening.** Then re-implement that rule **explicitly**, or you
+> have just deleted it.
+
+**How to actually check (tests will not tell you):**
+
+1. **Enumerate what flows through it.** For each *kind* of input, what did the old branch answer, and what
+   does the new one answer? Any input whose answer **flips** is a rule you are changing — name it out loud.
+2. **Hunt the fail-open default.** Where does the *new* path send an input it doesn't recognise? If that
+   fallback answers "yes" for unknowns (`unknown ⇒ allowed`), then **every routing mistake becomes a grant** —
+   security, licensing, visibility. This is how both incidents above became *grants* rather than denials.
+3. **A green suite is not evidence here.** The rule was accidental, so no test asserts it. Reason about the
+   inputs, or verify at runtime.
+
+**Corollary — a permissive default may be load-bearing.** If `unknown ⇒ true` is what makes new records
+appear at all, **do not "fix" it to fail closed.** Fix the routing that wrongly reached it, and mark the
+default as deliberate (see `kiss-coherence` → *Record the negative finding*).
+
 ## Why containment beats cleanup
 
 Collateral damage is the most expensive kind: it breaks code that was already working and that no

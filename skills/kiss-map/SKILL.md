@@ -44,6 +44,49 @@ and per-unit **synopses** that `kiss-readable` puts in the code — so legible c
 mappable. Run it at kickoff and whenever the structure changes; wire it into a pre-commit hook for
 a map that can't drift.
 
+## The twin check by NAME is not enough — check by QUESTION
+
+The symbol map answers *"does a function called X exist?"* It **cannot** answer *"has someone already
+answered this question?"* — and that is where duplication actually comes from.
+
+A real case: one system had **eight** implementations of *"which agents are installed?"*. They were named
+`LoadSpecialists`, `Enumerate`, `ExecuteSpecialistList`, `BuildRosterExpandedContent`… **not one contained
+the word the concept goes by.** Every twin-check passed. They drifted, and the app started telling its own
+AI that agents which plainly existed did not exist.
+
+**So the twin check has two halves:**
+
+1. **By symbol** (this map) — "is there a function called X?"
+2. **By question** — "does anything already answer *this concept*?"
+
+**How to do the second one: grep by STORE, not by concept name.**
+Searching for `roster` finds nothing useful. Searching for the **persistence** finds every answerer —
+file globs (`*.bgplugin`), file names (`roster-state.json`), tables, registries, singletons, env vars.
+**Any function that reads a primary store directly is already answering the question.**
+
+> **Before you write code that derives a fact from a store, grep the store.** If something already reads
+> it, you are about to write a duplicate — call it instead.
+
+## Index concepts, not just symbols
+
+The map says *what is in each unit*. It does not say *what canonical question each unit answers, and
+whether it is the sole answerer*. Keep a companion **concept index** — one entry per core concept:
+
+```
+question · canonical accessor · store · consumers · debt
+```
+
+e.g. `which agents are installed? → AgentLibraryScanner.Scan() [canonical]; store: *.bgplugin/manifest.json;
+consumers: specialist_list, CouncilAgentCatalog`
+
+This is the artifact that makes the eighth duplicate impossible to write by accident: you look up the
+**question**, find the owner, and call it. See `kiss-coherence` for the full audit and the pre-commit guard
+that fails the build when a new site starts deriving a concept that already has an owner.
+
+**Why the map alone cannot save you:** a symbol index is exact about *existence* and blind to *meaning*.
+Two functions can be perfect twins in behaviour and share no token in their names. Concept duplication is
+invisible to it by construction — which is why it needs its own index and its own guard.
+
 ## What this is (and isn't)
 
 A **structural index** — exact, deterministic, tiny, dependency-free. It cannot hallucinate a match.

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "_purpose": "COHERENCE AUDIT — 'one question, one answer.' For each core concept the system reasons about, exactly ONE canonical accessor derives it; every other site delegates. This dimension is ORTHOGONAL to size/bloat: a codebase can score perfectly on file size, cohesion and dead code while N small, clean, single-responsibility functions independently derive the SAME concept from DIFFERENT stores and silently drift apart.",
+  "_how_to_find_answerers": "Grep by STORE, not by concept name. Search for the persistence (file globs, file names, tables, registries, singletons, env vars) — every function that reads a primary store directly is a candidate answerer. Searching for the word 'roster' finds nothing useful; searching for '*.plugin' / 'roster-state.json' finds all eight.",
+  "_how_to_use": "1) Name your core concepts as QUESTIONS. 2) For each, grep the STORE to find every answerer. 3) Extract ONE canonical accessor; delegate the rest. 4) Register it below with store_patterns + an allowed map so a NEW answerer fails the build. 5) Record anything you cannot migrate yet as explicit DEBT — visible, not forgotten.",
+  "exclude_directories": [
+    ".git",
+    "bin",
+    "obj",
+    "node_modules",
+    "dist",
+    "docs"
+  ],
+  "concepts": [
+    {
+      "id": "EXAMPLE-installed-items",
+      "question": "Which items are installed on disk?",
+      "status": "CANONICAL",
+      "canonical_file": "src/Core/ItemLibraryScanner.cs",
+      "canonical_symbol": "ItemLibraryScanner.Scan(root)",
+      "_why": "Delete this example. Replace with your own concepts. In the project this guard was built for, THIS question had EIGHT independent answers reading four stores; they drifted, and the app began telling its own AI that items which plainly existed did not exist.",
+      "store_patterns": [
+        "\"\\*\\.myplugin\""
+      ],
+      "allowed": {
+        "src/Core/ItemLibraryScanner.cs": "CANONICAL — the single source of truth.",
+        "src/Loader.cs": "DIFFERENT CONCEPT — enumerates ALL installed plugins (incl. non-items) for load/unload. Not the item library. Collapsing these would be premature unification."
+      }
+    }
+  ]
+}
