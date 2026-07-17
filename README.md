@@ -1,4 +1,7 @@
 # KiSYSTEM
+
+![KiSYSTEM — measure twice, cut once. A Claude Code skill bundle for clean, modular, human-readable code](./assets/social-preview.png)
+
 ### *Keep It Simple, You Stupid Trained Electronic Monkey*
 
 AI writes code fast — and often like a clever monkey: a 600-line file no human can read, three
