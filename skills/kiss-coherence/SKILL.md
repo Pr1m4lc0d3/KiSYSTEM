@@ -35,6 +35,31 @@ Both are real. "All installed plugins (for load/unload)" and "council-eligible a
 same question and are not — collapsing them is its own bug. Coherence means one answer **per question**,
 not one accessor for everything vaguely similar.
 
+## Design values are a coherence concept too
+
+A **design token** is the canonical accessor for a *visual constant* — a font size, a color, a spacing
+step, a radius. "One question, one answer" applies unchanged: *"what size is body text?"* has **one**
+answer (the token), not N hardcoded `FontSize="13"` literals scattered across the views.
+
+Here the **store is the raw literal.** Grep the value form, not a concept name: `FontSize="[0-9]`, hex
+colors, margin/padding numbers. Every literal is a divergent answerer competing with the token that
+should own it.
+
+**The signature failure — built then ignored.** A token file gets authored (often with a `DESIGN.md`
+behind it), then *nothing adopts it* — components keep hardcoding. Measure adoption directly: **token
+references vs raw literals.** Near-zero adoption is the tell, and it is **worse than no token system** —
+it *looks* like a design system, passes every size/dead-code audit, yet the app can't be retuned from one
+place, so every screen is re-tuned **by hand, forever**. (One real app: a full type scale + `DESIGN.md`,
+**852 hardcoded font sizes and 0 token references** — every panel hand-fixed one at a time until someone
+counted.)
+
+**Fix — same shape as any coherence pass:** map each literal to the token of the *same value* (rendered
+result unchanged); leave true one-off outliers (icon glyphs, a lone hero number) literal and **say so**;
+add a missing rung when a common value has none; then **ratchet** — a guard counting raw literals so
+adoption can't regress. If the token file lives in a *merged resource dictionary* that can't resolve the
+token at authoring time, that is the cross-boundary duplication driver — use the runtime-resolving
+reference form, don't re-hardcode.
+
 ## The audit
 
 **1. Name the core nouns.** 5–15 concepts the system reasons about — the things it answers questions
@@ -174,6 +199,7 @@ When a consumer insists something "doesn't exist" that you can see on disk:
 
 - Two functions in different assemblies/processes doing "the same scan" — the far one re-implemented it.
 - A concept whose truth lives in 2+ persistent stores.
+- A **design-token / `DESIGN.md` file that exists but is barely referenced** — authored, then ignored. Grep raw literals vs token refs; near-zero adoption means the whole app is retuned by hand.
 - A comment saying *"mirrors X"* / *"keep in sync with Y"* — that is an unenforced invariant. Enforce it
   or extract it.
 - A consumer that "should" see something and doesn't.

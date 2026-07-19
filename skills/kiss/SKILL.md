@@ -22,6 +22,7 @@ before you cut:
 |---|---|
 | Does it already exist / where is it / does it have a twin? | `kiss-map` — consult `.kiss/inert.md` |
 | **Does this concept already have an OWNER?** (grep the **store**, not the name) | **`kiss-coherence`** |
+| **About to hardcode a visual constant** (font size, color, spacing, radius)? **Does a design token already own that value?** | **`kiss-coherence`** → *design values* |
 | Do I understand the frame and the slot it goes in? | `kiss-plan` |
 | Is the change scoped to one bounded unit? | `kiss-blast-radius` |
 | **If replacing a condition — what is it *incidentally* preventing?** | **`kiss-blast-radius`** |
@@ -52,9 +53,18 @@ If you can't answer a measurement, you have not measured twice. Stop and measure
 4. **Arm the guards** → `kiss-debt-guard` installs the size audit + config; `kiss-coherence` installs the
    concept guard (fails the build when a second site starts deriving a concept that already has an owner)
    and seeds a **concept index** — `question · canonical accessor · store · consumers`.
+5. **Establish the design system** → one source for the **visual constants** the UI reasons about — a type
+   scale, a spacing scale, a color palette, radii — defined in a token file and documented in **`DESIGN.md`**
+   (the scale, the rungs, the rationale). This is a coherence store like any other: register the token file
+   with `kiss-coherence` so a hardcoded literal that duplicates a token's value is caught as divergent
+   duplication. **Adopt it from the first line — no component hardcodes a value a token owns.** A token
+   layer with near-zero adoption is *worse* than none: it reads as a design system but every value is
+   answered in N hardcoded places, so the app cannot be retuned from one file and every screen is hand-
+   fixed forever. `DESIGN.md` is a living deliverable — when the scale gains a rung, it is recorded there.
 
-Kickoff **writes into the repo**: `design.md`, `.kiss/inert.md` (gitignored), a budget/guard config,
-and a short KISS contract merged into `CLAUDE.md`/`AGENTS.md`. That makes KISS a base, not advice.
+Kickoff **writes into the repo**: `design.md`, `DESIGN.md` + its token file, `.kiss/inert.md` (gitignored),
+a budget/guard config, and a short KISS contract merged into `CLAUDE.md`/`AGENTS.md`. That makes KISS a
+base, not advice.
 
 ## Routing — during ongoing work
 
@@ -66,6 +76,7 @@ and a short KISS contract merged into `CLAUDE.md`/`AGENTS.md`. That makes KISS a
 | Creating a file / deciding where code belongs | `kiss-modularity` |
 | Editing existing code without harming its neighbors | `kiss-blast-radius` |
 | The same concept is derived in more than one place / auditing an existing codebase | `kiss-coherence` |
+| About to hardcode a visual constant (size, color, spacing) a token could own / a token layer exists but nothing uses it | `kiss-coherence` (design values) |
 | Adding or changing code (a method, branch, member) | `kiss-clean-edits` |
 | A repo needs enforceable size/debt control | `kiss-debt-guard` |
 
