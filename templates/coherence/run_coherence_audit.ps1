@@ -69,17 +69,20 @@ if (-not $config -or -not $config.concepts -or @($config.concepts).Count -eq 0) 
 }
 
 # Default spread wide on purpose: a missing "file_globs" must not silently narrow the audit to one
-# language. Narrow it deliberately in config, never by omission.
+# language. Narrow it deliberately in config, never by omission. This set is also reused at the end
+# to tell "no source yet" apart from "globs pointed at the wrong stack".
+$wideDefaultGlobs = @(
+    '*.cs','*.ts','*.tsx','*.js','*.jsx','*.mjs','*.py','*.go','*.rs','*.rb','*.php',
+    '*.java','*.kt','*.swift','*.cpp','*.c','*.h','*.hpp',
+    '*.xaml','*.html','*.htm','*.css','*.scss','*.vue','*.svelte'
+)
+
 $globs = $config.file_globs
-if (-not $globs -or $globs.Count -eq 0) {
-    $globs = @(
-        '*.cs','*.ts','*.tsx','*.js','*.jsx','*.mjs','*.py','*.go','*.rs','*.rb','*.php',
-        '*.java','*.kt','*.swift','*.cpp','*.c','*.h','*.hpp',
-        '*.xaml','*.html','*.htm','*.css','*.scss','*.vue','*.svelte'
-    )
-}
+if (-not $globs -or @($globs).Count -eq 0) { $globs = $wideDefaultGlobs }
 
 function Get-CandidateFiles {
+    param([string[]]$Globs)
+
     if ($Staged) {
         $files = @(git -C $repoRoot diff --cached --name-only --diff-filter=ACMR)
     }
@@ -93,7 +96,7 @@ function Get-CandidateFiles {
     $files = $files | Sort-Object -Unique | Where-Object {
         $name = Split-Path $_ -Leaf
         $hit = $false
-        foreach ($g in $globs) { if ($name -like $g) { $hit = $true; break } }
+        foreach ($g in $Globs) { if ($name -like $g) { $hit = $true; break } }
         $hit
     }
 
@@ -104,7 +107,7 @@ function Get-CandidateFiles {
     }
 }
 
-$candidates = @(Get-CandidateFiles)
+$candidates = @(Get-CandidateFiles -Globs $globs)
 $violations = @()
 $debtCount  = 0
 
@@ -175,16 +178,31 @@ if ($violations.Count -gt 0) {
     exit 1
 }
 
-# Zero candidates means the globs do not match this repo. Reporting "passed" here would be the
-# built-then-ignored failure in its purest form: a green guard that inspected nothing.
+# Zero candidates has TWO very different causes and they must not be conflated:
+#   - the repo has no source files yet (greenfield) — legitimate, and blocking every commit until
+#     the first file lands would just teach people to bypass the hook;
+#   - the globs do not match this repo's stack — the built-then-ignored failure in its purest form,
+#     a green guard that inspected nothing.
+# Tell them apart by re-scanning with the wide default set. Files found there but not here means
+# the config is pointed at the wrong extensions.
 if ($candidates.Count -eq 0 -and $enforced -gt 0) {
-    Write-Host ''
-    Write-Host 'COHERENCE AUDIT INCONCLUSIVE — it scanned ZERO files.' -ForegroundColor Red
-    Write-Host ("Globs tried: {0}" -f ($globs -join ' ')) -ForegroundColor Yellow
-    Write-Host 'Set "file_globs" in tools/coherence/coherence.config.json to match this stack.'
-    Write-Host 'A guard that inspects nothing and prints green is worse than no guard at all.'
-    Write-Host ''
-    exit 1
+    # Same function, wider globs — so exclude_directories applies identically and the repo's own
+    # tooling cannot masquerade as "source you forgot to configure".
+    $anySource = @(Get-CandidateFiles -Globs $wideDefaultGlobs)
+
+    if ($anySource.Count -gt 0) {
+        Write-Host ''
+        Write-Host 'COHERENCE AUDIT INCONCLUSIVE — it scanned ZERO files, but this repo HAS source.' -ForegroundColor Red
+        Write-Host ("Globs tried : {0}" -f ($globs -join ' ')) -ForegroundColor Yellow
+        Write-Host ("Found anyway: {0}" -f ((@($anySource) | Select-Object -First 5) -join ', ')) -ForegroundColor Yellow
+        Write-Host 'Set "file_globs" in tools/coherence/coherence.config.json to match this stack.'
+        Write-Host 'A guard that inspects nothing and prints green is worse than no guard at all.'
+        Write-Host ''
+        exit 1
+    }
+
+    Write-Host ("Coherence audit: no source files yet; {0} concept(s) armed and waiting. Nothing to check." -f $enforced) -ForegroundColor Yellow
+    exit 0
 }
 
 Write-Host ("Coherence audit passed. Files scanned={0}; concepts enforced={1}; tracked debt={2}; open (undecided)={3}; fragmented (no canonical yet)={4}." -f $candidates.Count, $enforced, $debtCount, $open, $frag) -ForegroundColor Green
