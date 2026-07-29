@@ -54,17 +54,31 @@ If you can't answer a measurement, you have not measured twice. Stop and measure
    concept guard (fails the build when a second site starts deriving a concept that already has an owner)
    and seeds a **concept index** — `question · canonical accessor · store · consumers`.
 5. **Establish the design system** → one source for the **visual constants** the UI reasons about — a type
-   scale, a spacing scale, a color palette, radii — defined in a token file and documented in **`DESIGN.md`**
-   (the scale, the rungs, the rationale). This is a coherence store like any other: register the token file
-   with `kiss-coherence` so a hardcoded literal that duplicates a token's value is caught as divergent
-   duplication. **Adopt it from the first line — no component hardcodes a value a token owns.** A token
-   layer with near-zero adoption is *worse* than none: it reads as a design system but every value is
+   scale, a spacing scale, a color palette, radii — defined in a **token file** (the machine-readable
+   source: `tokens.css`, `Tokens.xaml`, `tokens.ts`) and explained in a **`## Design values` section of
+   `design.md`** (the scale, the rungs, the rationale). This is a coherence store like any other: register
+   the token file with `kiss-coherence` so a hardcoded literal that duplicates a token's value is caught as
+   divergent duplication. **Adopt it from the first line — no component hardcodes a value a token owns.** A
+   token layer with near-zero adoption is *worse* than none: it reads as a design system but every value is
    answered in N hardcoded places, so the app cannot be retuned from one file and every screen is hand-
-   fixed forever. `DESIGN.md` is a living deliverable — when the scale gains a rung, it is recorded there.
+   fixed forever. That section is a living deliverable — when the scale gains a rung, it is recorded there.
 
-Kickoff **writes into the repo**: `design.md`, `DESIGN.md` + its token file, `.kiss/inert.md` (gitignored),
-a budget/guard config, and a short KISS contract merged into `CLAUDE.md`/`AGENTS.md`. That makes KISS a
-base, not advice.
+> ### One design doc, and it is always `design.md`
+>
+> **Never split the design system into a second `DESIGN.md`.** Windows (NTFS) and macOS (APFS default)
+> are case-insensitive: `design.md` and `DESIGN.md` are **the same file**, so a system that asks for both
+> is literally unbuildable on the two platforms most people use. On Linux it is worse than unbuildable —
+> it *succeeds*, and you now have two rival answers to *"where is the design recorded?"*, which is the
+> precise duplication this skill exists to prevent. **KISS must not violate KISS.**
+>
+> The plan (goal · modules · interfaces · build sequence) and the design values (tokens · scale ·
+> rationale) are **sections of one file**. If that file is getting long, that is a signal to shorten the
+> prose — not to spawn a case-variant sibling. Applies to every doc this system emits: one concept, one
+> file, one canonical spelling, lowercase.
+
+Kickoff **writes into the repo**: `design.md` (plan **and** design values) + its token file,
+`.kiss/inert.md` (gitignored), a budget/guard config, and a short KISS contract merged into
+`CLAUDE.md`/`AGENTS.md`. That makes KISS a base, not advice.
 
 ## Routing — during ongoing work
 

@@ -45,11 +45,11 @@ Here the **store is the raw literal.** Grep the value form, not a concept name: 
 colors, margin/padding numbers. Every literal is a divergent answerer competing with the token that
 should own it.
 
-**The signature failure — built then ignored.** A token file gets authored (often with a `DESIGN.md`
-behind it), then *nothing adopts it* — components keep hardcoding. Measure adoption directly: **token
+**The signature failure — built then ignored.** A token file gets authored (often with a `## Design values`
+section of `design.md` behind it), then *nothing adopts it* — components keep hardcoding. Measure adoption directly: **token
 references vs raw literals.** Near-zero adoption is the tell, and it is **worse than no token system** —
 it *looks* like a design system, passes every size/dead-code audit, yet the app can't be retuned from one
-place, so every screen is re-tuned **by hand, forever**. (One real app: a full type scale + `DESIGN.md`,
+place, so every screen is re-tuned **by hand, forever**. (One real app: a full documented type scale,
 **852 hardcoded font sizes and 0 token references** — every panel hand-fixed one at a time until someone
 counted.)
 
@@ -199,7 +199,8 @@ When a consumer insists something "doesn't exist" that you can see on disk:
 
 - Two functions in different assemblies/processes doing "the same scan" — the far one re-implemented it.
 - A concept whose truth lives in 2+ persistent stores.
-- A **design-token / `DESIGN.md` file that exists but is barely referenced** — authored, then ignored. Grep raw literals vs token refs; near-zero adoption means the whole app is retuned by hand.
+- A **design-token file that exists but is barely referenced** — authored, then ignored. Grep raw literals vs token refs; near-zero adoption means the whole app is retuned by hand.
+- **Two docs answering one question** — `design.md` beside a `DESIGN.md`, `ARCHITECTURE.md` beside `architecture.md`, a `README` in two places. Case-variant siblings are the same file on Windows and macOS and rival answers on Linux. One concept, one file, lowercase.
 - A comment saying *"mirrors X"* / *"keep in sync with Y"* — that is an unenforced invariant. Enforce it
   or extract it.
 - A consumer that "should" see something and doesn't.

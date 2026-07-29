@@ -1,6 +1,10 @@
 # Design — <feature or project name>
 
 > Written before the code. A map, not a manuscript. Delete this line when you start.
+>
+> **This is the only design doc.** The plan and the design values both live here, as sections.
+> Never spawn a `DESIGN.md` beside it — case-variant siblings are the same file on Windows and
+> macOS, and two rival answers on Linux. If this file gets long, cut prose, don't split it.
 
 ## Goal
 
@@ -27,6 +31,25 @@ you should be able to change internals without breaking consumers.>
 1. <step> → verify: <check>
 2. <step> → verify: <check>
 3. <step> → verify: <check>
+
+## Design values
+
+<Only if this project renders a UI. The visual constants the interface reasons about — type scale,
+spacing scale, palette, radii. The TOKEN FILE is the machine-readable source of truth
+(tokens.css / Tokens.xaml / tokens.ts); this section records the scale, the rungs, and WHY.
+
+Register the token file with kiss-coherence so a raw literal duplicating a token's value fails the
+audit. Adopt from the first line: a token layer nothing references is worse than none — it reads as
+a design system while every value is really answered in N hardcoded places, so the app can never be
+retuned from one file.>
+
+**Token file:** `<path>`
+
+| Token | Value | Use |
+|---|---|---|
+| `<--name>` | `<value>` | <where it applies> |
+
+<One-off literals that deliberately stay hardcoded — name them here, or someone will "fix" them.>
 
 ## Frame check (measure twice)
 
