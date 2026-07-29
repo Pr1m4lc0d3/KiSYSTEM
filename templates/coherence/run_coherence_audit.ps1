@@ -27,6 +27,22 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# PowerShell 7+ only, and this is a correctness gate rather than a style preference. Under Windows
+# PowerShell 5.1 this config parsed into an object MISSING its properties: `concepts` came back null
+# while the surrounding object stayed truthy, so the audit enforced nothing, silently fell back to
+# the default globs, and printed "passed". A guard whose behaviour cannot be verified on an engine
+# must refuse to run there rather than report green on it.
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Host ''
+    # ASCII only in this block: it is the one message 5.1 will ever print, and 5.1 mangles UTF-8 dashes.
+    Write-Host 'COHERENCE AUDIT NOT RUN - requires PowerShell 7+ (pwsh).' -ForegroundColor Red
+    Write-Host ("This is Windows PowerShell {0}." -f $PSVersionTable.PSVersion) -ForegroundColor Yellow
+    Write-Host 'Install pwsh, or invoke as:  pwsh -NoProfile -File tools/coherence/run_coherence_audit.ps1'
+    Write-Host 'Refusing to print a result this engine cannot be trusted to produce.'
+    Write-Host ''
+    exit 1
+}
+
 # Resolve the repo from the SCRIPT's location, not the caller's working directory — the hook and a
 # human at a prompt invoke this from different places.
 $repoRoot = (git -C $PSScriptRoot rev-parse --show-toplevel 2>$null)
@@ -40,7 +56,17 @@ if (-not (Test-Path $configPath)) {
     exit 0
 }
 
-$config = Get-Content $configPath -Raw | ConvertFrom-Json
+$config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+
+# Refuse to run on a config the audit cannot understand. Silently treating an unreadable config as
+# "no concepts" is how a guard ends up reporting green while enforcing nothing.
+if (-not $config -or -not $config.concepts -or @($config.concepts).Count -eq 0) {
+    Write-Host ''
+    Write-Host "COHERENCE CONFIG UNUSABLE — no concepts found in $configPath" -ForegroundColor Red
+    Write-Host 'Declare at least one concept, or delete the config if this repo genuinely has none.'
+    Write-Host ''
+    exit 1
+}
 
 # Default spread wide on purpose: a missing "file_globs" must not silently narrow the audit to one
 # language. Narrow it deliberately in config, never by omission.
@@ -82,10 +108,19 @@ $candidates = @(Get-CandidateFiles)
 $violations = @()
 $debtCount  = 0
 
+# Tallied in the SAME pass that does the checking. An earlier version re-derived "is this concept
+# enforced?" a second time with Where-Object after the loop — the coherence guard committing a
+# coherence violation, and the two answers disagreed across PowerShell editions, producing a false
+# green on 5.1. One question, one answer, counted once.
+$enforced = 0
+$open     = 0
+$frag     = 0
+
 foreach ($concept in $config.concepts) {
-    if (-not $concept.canonical_file) { continue }                 # FRAGMENTED — nothing to enforce yet
-    if ($concept.canonical_file -eq 'UNDECIDED') { continue }      # OPEN — owner not chosen yet; see design.md
-    if (-not $concept.store_patterns -or $concept.store_patterns.Count -eq 0) { continue }
+    if (-not $concept.canonical_file) { $frag++; continue }        # FRAGMENTED — nothing to enforce yet
+    if ($concept.canonical_file -eq 'UNDECIDED') { $open++; continue }  # OPEN — owner not chosen; see design.md
+    if (-not $concept.store_patterns -or @($concept.store_patterns).Count -eq 0) { $frag++; continue }
+    $enforced++
 
     # Allow-list keys are repo-relative, forward-slashed.
     $allowed = @{}
@@ -139,10 +174,6 @@ if ($violations.Count -gt 0) {
     Write-Host ''
     exit 1
 }
-
-$enforced = @($config.concepts | Where-Object { $_.canonical_file -and $_.canonical_file -ne 'UNDECIDED' -and $_.store_patterns.Count -gt 0 }).Count
-$open     = @($config.concepts | Where-Object { $_.canonical_file -eq 'UNDECIDED' }).Count
-$frag     = @($config.concepts | Where-Object { -not $_.canonical_file }).Count
 
 # Zero candidates means the globs do not match this repo. Reporting "passed" here would be the
 # built-then-ignored failure in its purest form: a green guard that inspected nothing.
