@@ -27,7 +27,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot  = (git rev-parse --show-toplevel).Trim()
+# Resolve the repo from the SCRIPT's location, not the caller's working directory — the hook and a
+# human at a prompt invoke this from different places.
+$repoRoot = (git -C $PSScriptRoot rev-parse --show-toplevel 2>$null)
+if (-not $repoRoot) { $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
+$repoRoot = $repoRoot.Trim()
+
 $configPath = Join-Path $repoRoot 'tools/coherence/coherence.config.json'
 
 if (-not (Test-Path $configPath)) {
@@ -37,13 +42,33 @@ if (-not (Test-Path $configPath)) {
 
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
 
+# Default spread wide on purpose: a missing "file_globs" must not silently narrow the audit to one
+# language. Narrow it deliberately in config, never by omission.
+$globs = $config.file_globs
+if (-not $globs -or $globs.Count -eq 0) {
+    $globs = @(
+        '*.cs','*.ts','*.tsx','*.js','*.jsx','*.mjs','*.py','*.go','*.rs','*.rb','*.php',
+        '*.java','*.kt','*.swift','*.cpp','*.c','*.h','*.hpp',
+        '*.xaml','*.html','*.htm','*.css','*.scss','*.vue','*.svelte'
+    )
+}
+
 function Get-CandidateFiles {
     if ($Staged) {
-        $files = git diff --cached --name-only --diff-filter=ACMR |
-                 Where-Object { $_ -like '*.cs' }
+        $files = @(git -C $repoRoot diff --cached --name-only --diff-filter=ACMR)
     }
     else {
-        $files = git ls-files '*.cs'
+        # Tracked AND untracked-but-not-ignored. On a young repo everything is still untracked;
+        # scanning only tracked files would pass a repo whose every file is a violation.
+        $files  = @(git -C $repoRoot ls-files)
+        $files += @(git -C $repoRoot ls-files --others --exclude-standard)
+    }
+
+    $files = $files | Sort-Object -Unique | Where-Object {
+        $name = Split-Path $_ -Leaf
+        $hit = $false
+        foreach ($g in $globs) { if ($name -like $g) { $hit = $true; break } }
+        $hit
     }
 
     $excluded = $config.exclude_directories
@@ -59,6 +84,7 @@ $debtCount  = 0
 
 foreach ($concept in $config.concepts) {
     if (-not $concept.canonical_file) { continue }                 # FRAGMENTED — nothing to enforce yet
+    if ($concept.canonical_file -eq 'UNDECIDED') { continue }      # OPEN — owner not chosen yet; see design.md
     if (-not $concept.store_patterns -or $concept.store_patterns.Count -eq 0) { continue }
 
     # Allow-list keys are repo-relative, forward-slashed.
@@ -114,8 +140,21 @@ if ($violations.Count -gt 0) {
     exit 1
 }
 
-$enforced = @($config.concepts | Where-Object { $_.canonical_file -and $_.store_patterns.Count -gt 0 }).Count
+$enforced = @($config.concepts | Where-Object { $_.canonical_file -and $_.canonical_file -ne 'UNDECIDED' -and $_.store_patterns.Count -gt 0 }).Count
+$open     = @($config.concepts | Where-Object { $_.canonical_file -eq 'UNDECIDED' }).Count
 $frag     = @($config.concepts | Where-Object { -not $_.canonical_file }).Count
 
-Write-Host ("Coherence audit passed. Concepts enforced={0}; tracked debt={1}; fragmented (no canonical yet)={2}." -f $enforced, $debtCount, $frag) -ForegroundColor Green
+# Zero candidates means the globs do not match this repo. Reporting "passed" here would be the
+# built-then-ignored failure in its purest form: a green guard that inspected nothing.
+if ($candidates.Count -eq 0 -and $enforced -gt 0) {
+    Write-Host ''
+    Write-Host 'COHERENCE AUDIT INCONCLUSIVE — it scanned ZERO files.' -ForegroundColor Red
+    Write-Host ("Globs tried: {0}" -f ($globs -join ' ')) -ForegroundColor Yellow
+    Write-Host 'Set "file_globs" in tools/coherence/coherence.config.json to match this stack.'
+    Write-Host 'A guard that inspects nothing and prints green is worse than no guard at all.'
+    Write-Host ''
+    exit 1
+}
+
+Write-Host ("Coherence audit passed. Files scanned={0}; concepts enforced={1}; tracked debt={2}; open (undecided)={3}; fragmented (no canonical yet)={4}." -f $candidates.Count, $enforced, $debtCount, $open, $frag) -ForegroundColor Green
 exit 0

@@ -3,6 +3,18 @@
   "_purpose": "COHERENCE AUDIT — 'one question, one answer.' For each core concept the system reasons about, exactly ONE canonical accessor derives it; every other site delegates. This dimension is ORTHOGONAL to size/bloat: a codebase can score perfectly on file size, cohesion and dead code while N small, clean, single-responsibility functions independently derive the SAME concept from DIFFERENT stores and silently drift apart.",
   "_how_to_find_answerers": "Grep by STORE, not by concept name. Search for the persistence (file globs, file names, tables, registries, singletons, env vars) — every function that reads a primary store directly is a candidate answerer. Searching for the word 'roster' finds nothing useful; searching for '*.plugin' / 'roster-state.json' finds all eight.",
   "_how_to_use": "1) Name your core concepts as QUESTIONS. 2) For each, grep the STORE to find every answerer. 3) Extract ONE canonical accessor; delegate the rest. 4) Register it below with store_patterns + an allowed map so a NEW answerer fails the build. 5) Record anything you cannot migrate yet as explicit DEBT — visible, not forgotten.",
+  "_file_globs": "WHICH FILES THE AUDIT READS. Set this to your stack. Omit it and the audit scans a wide default set rather than silently narrowing to one language — a guard pointed at the wrong extension inspects nothing and prints green, which is the loudest lie a guard can tell. The audit hard-fails as INCONCLUSIVE if it scans zero files while any concept is enforced.",
+  "file_globs": [
+    "*.cs",
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+    "*.py",
+    "*.xaml",
+    "*.html",
+    "*.css"
+  ],
   "exclude_directories": [
     ".git",
     "bin",
