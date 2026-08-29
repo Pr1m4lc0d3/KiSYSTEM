@@ -154,3 +154,18 @@ from your real files, then ratchet down. The tiers matter more than the numbers.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+## Where this came from
+
+Deliberon is a Windows desktop app that runs a council of AI agents on a hard decision and hands
+back a Decision Record: dissent preserved, every claim marked as proved, asserted, or estimated.
+
+KiSYSTEM is the code discipline Deliberon is built under, published in full because a standard
+enforced only by good intentions is not a standard.
+
+Pay once, it's yours, no subscription. Thirty days of the full council with no account and no
+card. Runs on your machine with your own model keys.
+
+https://deliberon.com
