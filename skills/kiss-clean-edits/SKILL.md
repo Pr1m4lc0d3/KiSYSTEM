@@ -1,6 +1,6 @@
 ---
 name: kiss-clean-edits
-description: Use when adding or changing code in an existing file — a method, handler, case branch, property, or any member. Enforces three reflexes at the moment of the edit: state the host file's size before adding to it (extract-on-touch), make only changes that trace to the request (surgical edits), and write nothing speculative (YAGNI).
+description: "Use when adding or changing code in an existing file — a method, handler, case branch, property, or any member. Enforces three reflexes at the moment of the edit: state the host file's size before adding to it (extract-on-touch), make only changes that trace to the request (surgical edits), and write nothing speculative (YAGNI)."
 ---
 
 # KISS — Clean Edits

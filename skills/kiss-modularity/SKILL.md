@@ -1,6 +1,6 @@
 ---
 name: kiss-modularity
-description: Use when creating a file, deciding where new code belongs, or about to edit an existing file — to keep units cohesive and right-sized while guarding BOTH cliffs: files that grow into monoliths, and codebases that shatter into so many tiny files that the tree and the map become their own complexity. Covers one-concern-per-unit, sections-before-files, size tiers, real-bloat vs legitimate length, and a responsibility check.
+description: "Use when creating a file, deciding where new code belongs, or about to edit an existing file — to keep units cohesive and right-sized while guarding BOTH cliffs: files that grow into monoliths, and codebases that shatter into so many tiny files that the tree and the map become their own complexity. Covers one-concern-per-unit, sections-before-files, size tiers, real-bloat vs legitimate length, and a responsibility check."
 ---
 
 # KISS — Modularity
