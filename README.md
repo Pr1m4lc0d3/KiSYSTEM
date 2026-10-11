@@ -169,3 +169,6 @@ Pay once, it's yours, no subscription. Thirty days of the full council with no a
 card. Runs on your machine with your own model keys.
 
 https://deliberon.com
+
+Also on Agensi, if you would rather install it in one step and have it keep itself
+updated: https://www.agensi.io/skills/kiss-keep-it-structurally-sound
