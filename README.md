@@ -153,7 +153,9 @@ from your real files, then ratchet down. The tiers matter more than the numbers.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Not open source. All rights reserved. See [LICENSE](LICENSE).
+
+Licences are sold: https://www.agensi.io/creators/ryan-heltemes
 
 ---
 
